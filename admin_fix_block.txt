@@ -1,0 +1,83 @@
+    state.allBatsmen = [
+        { id: 0, name: els.inpStriker.value || "Batsman 1", runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out" },
+        { id: 1, name: els.inpNonStriker.value || "Batsman 2", runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out" }
+    ];
+    
+    state.batsmen[0] = { id: 0, name: els.inpStriker.value || "Batsman 1", runs: 0, balls: 0, fours: 0, sixes: 0 };
+    state.batsmen[1] = { id: 1, name: els.inpNonStriker.value || "Batsman 2", runs: 0, balls: 0, fours: 0, sixes: 0 };
+    
+    state.allBowlers = [
+        { id: 0, name: els.inpBowler.value || "Bowler", overs: 0, ballsInCurrentOver: 0, runs: 0, maidens: 0, wickets: 0 }
+    ];
+    state.bowler = { id: 0, name: els.inpBowler.value || "Bowler", overs: 0, ballsInCurrentOver: 0, runs: 0, maidens: 0, wickets: 0 };
+    
+    undoStack = [];
+    broadcastUpdate();
+    populatePlayerDropdowns();
+    updateAdminUI();
+    alert("Match Reset! Now in 1st Innings.");
+};
+
+window.startSecondInnings = function() {
+    if(!confirm("Start 2nd Innings? This will set the target, clear current score, and reset scorecards. Team names will be swapped!")) return;
+    
+    state.target = state.teamRuns + 1;
+    els.inpTarget.value = state.target;
+    
+    config.innings = 2;
+    els.inpInnings.value = 2;
+    
+    const tempTeam = els.inpTeamA.value;
+    els.inpTeamA.value = els.inpTeamB.value;
+    els.inpTeamB.value = tempTeam;
+    config.teamA = els.inpTeamA.value;
+    config.teamB = els.inpTeamB.value;
+    
+    state.teamRuns = 0;
+    state.teamWickets = 0;
+    state.totalBalls = 0;
+    state.lastBalls = [];
+    state.partnerRuns = 0;
+    state.partnerBalls = 0;
+    state.strikerIndex = 0;
+    state.currentOverRuns = 0;
+    state.currentOverWickets = 0;
+    state.oversHistory = [];
+    
+    state.allBatsmen = [
+        { id: 0, name: els.inpStriker.value || "Batsman 1", runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out" },
+        { id: 1, name: els.inpNonStriker.value || "Batsman 2", runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out" }
+    ];
+    
+    state.batsmen[0] = { id: 0, name: els.inpStriker.value || "Batsman 1", runs: 0, balls: 0, fours: 0, sixes: 0 };
+    state.batsmen[1] = { id: 1, name: els.inpNonStriker.value || "Batsman 2", runs: 0, balls: 0, fours: 0, sixes: 0 };
+    
+    state.allBowlers = [
+        { id: 0, name: els.inpBowler.value || "Bowler", overs: 0, ballsInCurrentOver: 0, runs: 0, maidens: 0, wickets: 0 }
+    ];
+    state.bowler = { id: 0, name: els.inpBowler.value || "Bowler", overs: 0, ballsInCurrentOver: 0, runs: 0, maidens: 0, wickets: 0 };
+    
+    undoStack = [];
+    broadcastUpdate();
+    populatePlayerDropdowns();
+    updateAdminUI();
+    alert("2nd Innings Started! Target is " + state.target);
+};
+
+window.showNotOut = function() {
+    triggerAnimation('NOTOUT');
+};
+
+let isGraphVisible = false;
+window.toggleAnalysisGraph = function() {
+    socket.emit('triggerEvent', 'graph_toggle'.toUpperCase());
+    isGraphVisible = !isGraphVisible;
+    const graphOverlay = document.getElementById('graph-overlay');
+    if (graphOverlay) {
+        if (isGraphVisible) {
+            renderGraph();
+            graphOverlay.classList.add('active');
+        } else {
+            graphOverlay.classList.remove('active');
+        }
+    }

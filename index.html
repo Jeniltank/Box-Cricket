@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Scoring Broadcast Graphic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .event-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 10, 30, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .event-overlay.active {
+            opacity: 1;
+        }
+
+        .event-text {
+            font-size: 200px;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            font-style: italic;
+            transform: scale(0.2) translateY(50px) rotate(-10deg);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 10px;
+        }
+
+        .event-overlay.active .event-text {
+            transform: scale(1) translateY(0) rotate(-5deg);
+            opacity: 1;
+        }
+
+        .event-six {
+            color: #00E676;
+            text-shadow: 0 0 50px #00E676, 0 0 100px #00E676;
+        }
+
+        .event-four {
+            color: #00B0FF;
+            text-shadow: 0 0 50px #00B0FF, 0 0 100px #00B0FF;
+        }
+
+        .event-wicket {
+            color: #FF1744;
+            text-shadow: 0 0 50px #FF1744, 0 0 100px #FF1744;
+        }
+
+        .event-notout {
+            color: #FF9800;
+            text-shadow: 0 0 50px #FF9800, 0 0 100px #FF9800;
+        }
+
+        .event-wide {
+            color: #E040FB;
+            text-shadow: 0 0 50px #E040FB, 0 0 100px #E040FB;
+        }
+
+        .event-noball {
+            color: #FFEA00;
+            text-shadow: 0 0 50px #FFEA00, 0 0 100px #FFEA00;
+        }
+
+        /* Analysis Graph Overlay */
+        .graph-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 15, 40, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            /* Just below event overlay */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .graph-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .graph-title {
+            font-size: 60px;
+            font-weight: 800;
+            color: #00E676;
+            margin-bottom: 40px;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+        }
+
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 30px;
+            height: 550px;
+            width: 80%;
+            border-bottom: 4px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            width: 80px;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, #2196F3 0%, #0D47A1 100%);
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            min-height: 5px;
+            transition: height 0.5s ease;
+            flex-shrink: 0;
+        }
+
+        .bar-label {
+            margin-top: 15px;
+            color: white;
+            font-size: 26px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .bar-runs {
+            color: #FFF;
+            font-size: 34px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .wicket-dot {
+            width: 25px;
+            height: 25px;
+            background-color: #FF1744;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #FF1744, 0 0 30px #FF1744;
+            border: 2px solid white;
+            z-index: 2;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background Layer (Abstract Stadium / Deep Blue pattern) -->
+    <div class="bg-layer"></div>
+    <!-- EVENT ANIMATION OVERLAY -->
+    <div id="event-overlay" class="event-overlay">
+        <div id="event-text" class="event-text">SIX!</div>
+    </div>
+
+    <!-- OVER SUMMARY OVERLAY -->
+    <div id="over-summary-overlay" class="event-overlay" style="flex-direction: column;">
+        <div class="graph-title" style="font-size: 80px; text-shadow: 0 0 30px #00E676; margin-bottom: 20px;">END OF
+            OVER <span id="summary-over-num"></span></div>
+        <div
+            style="font-size: 50px; color: white; font-weight: bold; background: rgba(0,0,0,0.5); padding: 15px 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            BOWLER: <span id="summary-bowler" style="color:#00E676;"></span>
+        </div>
+        <div style="display:flex; gap: 60px; margin-top: 40px;">
+            <div
+                style="font-size: 65px; color: #00B0FF; font-weight: bold; background: rgba(0, 176, 255, 0.1); padding: 20px 40px; border-radius: 15px; border: 2px solid #00B0FF; box-shadow: 0 0 20px rgba(0, 176, 255, 0.3);">
+                RUNS: <span id="summary-runs"></span></div>
+            <div
+                style="font-size: 65px; color: #FF1744; font-weight: bold; background: rgba(255, 23, 68, 0.1); padding: 20px 40px; border-radius: 15px; border: 2px solid #FF1744; box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);">
+                WICKETS: <span id="summary-wickets"></span></div>
+        </div>
+    </div>
+
+    <!-- ANALYSIS GRAPH OVERLAY -->
+    <div id="graph-overlay" class="graph-overlay">
+        <div class="graph-title">OVER-BY-OVER ANALYSIS</div>
+        <div id="chart-container" class="chart-container">
+            <!-- Bars injected by JS -->
+        </div>
+    </div>
+
+    <!-- BATTER SUMMARY OVERLAY -->
+    <div id="batter-summary-overlay" class="graph-overlay">
+        <div class="graph-title" style="color: #E040FB; text-shadow: 0 0 20px rgba(224, 64, 251, 0.5);">BATTERS AT
+            CREASE</div>
+        <div style="display:flex; gap: 40px; margin-top: 20px;">
+            <!-- Batsman 1 -->
+            <div
+                style="background: rgba(0, 15, 40, 0.9); padding: 40px; border-radius: 20px; border: 2px solid #E040FB; min-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(224, 64, 251, 0.3);">
+                <div id="bs-name-0" style="font-size: 50px; color: white; font-weight: bold; margin-bottom: 20px;">
+                </div>
+                <div
+                    style="font-size: 90px; color: #E040FB; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(224, 64, 251, 0.5);">
+                    <span id="bs-runs-0"></span><span
+                        style="font-size:40px; color:#aaa; font-weight: normal; text-shadow: none;"> (<span
+                            id="bs-balls-0"></span>)</span>
+                </div>
+                <div
+                    style="display:flex; justify-content: space-between; margin-top: 30px; font-size: 30px; color: #ddd; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div>4s: <span id="bs-4s-0" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>6s: <span id="bs-6s-0" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>SR: <span id="bs-sr-0" style="color:#FF9800; font-weight:bold;"></span></div>
+                </div>
+            </div>
+            <!-- Batsman 2 -->
+            <div
+                style="background: rgba(0, 15, 40, 0.9); padding: 40px; border-radius: 20px; border: 2px solid #00B0FF; min-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0, 176, 255, 0.3);">
+                <div id="bs-name-1" style="font-size: 50px; color: white; font-weight: bold; margin-bottom: 20px;">
+                </div>
+                <div
+                    style="font-size: 90px; color: #00B0FF; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0, 176, 255, 0.5);">
+                    <span id="bs-runs-1"></span><span
+                        style="font-size:40px; color:#aaa; font-weight: normal; text-shadow: none;"> (<span
+                            id="bs-balls-1"></span>)</span>
+                </div>
+                <div
+                    style="display:flex; justify-content: space-between; margin-top: 30px; font-size: 30px; color: #ddd; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div>4s: <span id="bs-4s-1" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>6s: <span id="bs-6s-1" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>SR: <span id="bs-sr-1" style="color:#FF9800; font-weight:bold;"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL SCORECARD OVERLAY -->
+    <div id="scorecard-overlay" class="graph-overlay"
+        style="align-items: center; justify-content: flex-start; padding-top: 50px;">
+        <div class="graph-title" style="color: #FFEA00; text-shadow: 0 0 20px rgba(255, 234, 0, 0.5); font-size: 70px;">
+            BATTING SCORECARD</div>
+        <div
+            style="background: rgba(0, 15, 40, 0.95); width: 85%; max-width: 1200px; border-radius: 20px; border: 2px solid #FFEA00; box-shadow: 0 0 40px rgba(255, 234, 0, 0.3); padding: 30px; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; color: white; text-align: left; font-size: 32px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #FFEA00;">
+                        <th style="padding: 15px; width: 35%;">BATTER</th>
+                        <th style="padding: 15px; width: 25%;">STATUS</th>
+                        <th style="padding: 15px; text-align: center;">R</th>
+                        <th style="padding: 15px; text-align: center;">B</th>
+                        <th style="padding: 15px; text-align: center;">4s</th>
+                        <th style="padding: 15px; text-align: center;">6s</th>
+                        <th style="padding: 15px; text-align: center;">SR</th>
+                    </tr>
+                </thead>
+                <tbody id="scorecard-body">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        <div
+            style="display:flex; justify-content: space-between; width: 85%; max-width: 1200px; margin-top: 20px; font-size: 35px; color: white; font-weight: bold; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            <div>TOTAL: <span id="scorecard-total-runs" style="color:#00E676;"></span>/<span
+                    id="scorecard-total-wickets" style="color:#FF1744;"></span></div>
+            <div>OVERS: <span id="scorecard-total-overs" style="color:#00B0FF;"></span></div>
+            <div>EXTRAS: <span id="scorecard-total-extras" style="color:#E040FB;"></span></div>
+        </div>
+    </div>
+
+    <!-- FULL BOWLING SCORECARD OVERLAY -->
+    <div id="bowling-scorecard-overlay" class="graph-overlay"
+        style="align-items: center; justify-content: flex-start; padding-top: 50px;">
+        <div class="graph-title" style="color: #00E5FF; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); font-size: 70px;">
+            BOWLING SCORECARD</div>
+        <div
+            style="background: rgba(0, 15, 40, 0.95); width: 85%; max-width: 1200px; border-radius: 20px; border: 2px solid #00E5FF; box-shadow: 0 0 40px rgba(0, 229, 255, 0.3); padding: 30px; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; color: white; text-align: left; font-size: 32px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #00E5FF;">
+                        <th style="padding: 15px; width: 45%;">BOWLER</th>
+                        <th style="padding: 15px; text-align: center;">O</th>
+                        <th style="padding: 15px; text-align: center;">M</th>
+                        <th style="padding: 15px; text-align: center;">R</th>
+                        <th style="padding: 15px; text-align: center;">W</th>
+                        <th style="padding: 15px; text-align: center;">ECON</th>
+                    </tr>
+                </thead>
+                <tbody id="bowling-scorecard-body">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        <!-- PLAYING SQUADS OVERLAY -->
+        <div id="squads-overlay" class="graph-overlay"
+            style="align-items: center; justify-content: flex-start; padding-top: 40px; overflow-y: auto; padding-bottom: 40px;">
+            <div class="graph-title"
+                style="color: #00E5FF; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); font-size: 70px; margin-bottom: 10px;">
+                PLAYING SQUADS</div>
+            <div id="squads-subtitle"
+                style="font-size: 24px; color: #aaa; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-align: center;">
+                TEAM A VS TEAM B</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 40px; width: 90%; max-width: 1200px;"
+                id="squads-container">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <div class="broadcast-container">
+
+            <!-- HEADER SECTION -->
+            <header class="header-section glass-panel neon-border">
+                <div class="header-left">
+                    <span class="tournament-name">KGK SAMAJ YUVA MANDAL ORGANISED BOX CRICKET TOURNAMENT</span>
+                    <span class="match-number">| LIVE MATCH</span>
+                </div>
+                <div class="header-center">
+                    <h1 class="teams"><span id="team-a-name">TEAM A</span> <span class="vs">VS</span> <span
+                            id="team-b-name">TEAM B</span></h1>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div class="match-status live-indicator">
+                            <span class="pulse"></span> LIVE
+                        </div>
+                        <div id="free-hit-badge"
+                            style="display:none; background:#FF1744; color:white; font-size:14px; font-weight:900; padding:4px 12px; border-radius:4px; border:1px solid #fff; box-shadow: 0 0 15px #FF1744; letter-spacing:1px;">
+                            FREE HIT</div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="innings-info" id="innings-display">1ST INNINGS</span>
+                    <span class="venue">| BALMADIR -KUKAMA BHUJ</span>
+                    <span class="date" id="live-time"></span>
+                </div>
+            </header>
+
+            <!-- MAIN OVERLAY -->
+            <main class="main-overlay">
+
+                <!-- LEFT SCORE PANEL -->
+                <section class="left-panel glass-panel neon-border">
+                    <div class="main-score-box">
+                        <div class="batting-team" id="batting-team-name">BATTING TEAM</div>
+                        <div class="score-display">
+                            <span id="runs">0</span><span class="slash">/</span><span id="wickets">0</span>
+                        </div>
+                        <div class="overs-display">
+                            Overs: <span id="overs" class="highlight-text">0.0</span> / <span
+                                id="total-overs-display">6.0</span>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="label">CRR</span>
+                            <span class="value" id="crr">0.00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">REQ. RR</span>
+                            <span class="value highlight-text" id="rrr">0.00</span>
+                        </div>
+                        <div class="stat-item partnership-item">
+                            <span class="label">PARTNERSHIP</span>
+                            <span class="value"><span id="partner-runs">0</span> (<span
+                                    id="partner-balls">0</span>)</span>
+                        </div>
+                    </div>
+
+                    <div class="last-over-box">
+                        <span class="label">LAST 6 BALLS:</span>
+                        <div class="balls-timeline" id="last-balls">
+                            <!-- Filled by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CENTER PANEL: BATSMEN & BOWLER -->
+                <section class="center-panel">
+
+                    <!-- Batsmen Section -->
+                    <div class="batsmen-section glass-panel neon-border">
+                        <div class="table-header">
+                            <span class="col-name">BATTERS</span>
+                            <span class="col-r">R</span>
+                            <span class="col-b">B</span>
+                            <span class="col-4s">4s</span>
+                            <span class="col-6s">6s</span>
+                            <span class="col-sr">SR</span>
+                        </div>
+                        <div class="player-row active-striker" id="striker-row">
+                            <span class="col-name player-name">Batsman 1 <span class="striker-indicator">▶</span></span>
+                            <span class="col-r highlight-text" id="striker-runs">0</span>
+                            <span class="col-b" id="striker-balls">0</span>
+                            <span class="col-4s" id="striker-4s">0</span>
+                            <span class="col-6s" id="striker-6s">0</span>
+                            <span class="col-sr" id="striker-sr">0.0</span>
+                        </div>
+                        <div class="player-row" id="non-striker-row">
+                            <span class="col-name player-name">Batsman 2 <span class="striker-indicator"
+                                    style="opacity:0">▶</span></span>
+                            <span class="col-r highlight-text" id="non-striker-runs">0</span>
+                            <span class="col-b" id="non-striker-balls">0</span>
+                            <span class="col-4s" id="non-striker-4s">0</span>
+                            <span class="col-6s" id="non-striker-6s">0</span>
+                            <span class="col-sr" id="non-striker-sr">0.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Bowler Section -->
+                    <div class="bowler-section glass-panel neon-border">
+                        <div class="table-header bowler-header">
+                            <span class="col-name">BOWLER</span>
+                            <span class="col-o">O</span>
+                            <span class="col-m">M</span>
+                            <span class="col-r">R</span>
+                            <span class="col-w">W</span>
+                            <span class="col-eco">ECO</span>
+                        </div>
+                        <div class="player-row">
+                            <span class="col-name player-name">Bowler</span>
+                            <span class="col-o" id="bowler-overs">0.0</span>
+                            <span class="col-m" id="bowler-maidens">0</span>
+                            <span class="col-r highlight-text" id="bowler-runs">0</span>
+                            <span class="col-w highlight-text" id="bowler-wickets">0</span>
+                            <span class="col-eco" id="bowler-eco">0.0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RIGHT STATISTICS PANEL -->
+                <section class="right-panel glass-panel neon-border">
+
+                    <!-- 1ST INNINGS VIEW -->
+                    <div id="innings-1-view" style="display:none; flex-direction:column; gap:20px; text-align:center;">
+                        <div class="target-box">
+                            <span class="label">RUNS SCORED</span>
+                            <span class="target-score" id="i1-runs">0</span>
+                        </div>
+
+                        <div class="equation-box">
+                            <div class="eq-item">
+                                <span class="label">BALLS REM.</span>
+                                <span class="value" id="i1-balls-rem">0</span>
+                            </div>
+                            <div class="eq-item">
+                                <span class="label">RUN RATE</span>
+                                <span class="value highlight-text" id="i1-rr">0.00</span>
+                            </div>
+                            <div class="eq-item">
+                                <span class="label">WKTS REM.</span>
+                                <span class="value" id="i1-wkts">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2ND INNINGS VIEW -->
+                    <div id="innings-2-view" style="display:flex; flex-direction:column; gap:20px;">
+                        <div class="target-box">
+                            <span class="label">TARGET</span>
+                            <span class="target-score" id="i2-target">0</span>
+                        </div>
+
+                        <div class="equation-box">
+                            <div class="eq-item">
+                                <span class="label">RUNS NEEDED</span>
+                                <span class="value highlight-text" id="runs-needed">0</span>
+                            </div>
+                            <div class="eq-item">
+                                <span class="label">BALLS REM.</span>
+                                <span class="value" id="balls-rem">0</span>
+                            </div>
+                        </div>
+
+                        <div class="win-predictor">
+                            <div class="win-header">
+                                <span>WIN PROBABILITY</span>
+                            </div>
+                            <div class="win-bar">
+                                <div class="team-a-bar" id="win-prob-bar" style="width: 50%;">50%</div>
+                                <div class="team-b-bar">50%</div>
+                            </div>
+                            <div class="win-labels">
+                                <span id="win-team-a">TEAM A</span>
+                                <span id="win-team-b">TEAM B</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+            <script src="broadcast.js"></script>
+</body>
+
+</html>

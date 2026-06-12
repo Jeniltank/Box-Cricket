@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Box Cricket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { 
+            background: #0b0f19; /* Darker clean background */
+            overflow-y: auto; 
+            padding-bottom: 50px;
+        }
+        
+        .admin-header { 
+            padding: 25px; 
+            text-align: center; 
+            color: white; 
+            font-size: 28px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+        .admin-header span { color: var(--primary-accent); }
+
+        .dashboard-container { 
+            display: grid; 
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px; 
+            padding: 0 20px; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            align-items: start;
+        }
+
+        .dashboard-card { 
+            background: rgba(15, 20, 35, 0.8); 
+            border-radius: 16px; 
+            border: 1px solid rgba(0, 123, 255, 0.2); 
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .card-title {
+            color: var(--highlight-color);
+            margin-bottom: 25px;
+            font-size: 18px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            color: #90A4AE;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-group input, .input-group select {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .input-group select {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+            background: rgba(0,0,0,0.6);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-action.save {
+            background: linear-gradient(135deg, var(--primary-accent), #0056b3);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        }
+        .btn-action.save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6); }
+
+        .btn-action.reset {
+            background: rgba(229, 57, 53, 0.1);
+            color: #E53935;
+            border: 1px solid rgba(229, 57, 53, 0.3);
+        }
+        .btn-action.reset:hover { background: rgba(229, 57, 53, 0.2); }
+
+        /* Scorer Controls Special Styling for Admin */
+        .scorer-controls {
+            margin: 0;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .controls-grid button {
+            height: 70px;
+            font-size: 22px;
+            border-radius: 12px;
+        }
+
+        .btn-wicket { grid-column: span 2; }
+        .btn-undo { grid-column: span 2; }
+
+        .free-hit-container {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .free-hit-toggle {
+            color: var(--highlight-color);
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .free-hit-toggle input {
+            transform: scale(1.5);
+            margin-right: 10px;
+        }
+
+        /* Animation Overlay (Admin Preview) */
+        .event-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 10, 30, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .event-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .event-text {
+            font-size: 150px;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            font-style: italic;
+            transform: scale(0.2) translateY(50px) rotate(-10deg);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 10px;
+        }
+        .event-overlay.active .event-text {
+            transform: scale(1) translateY(0) rotate(-5deg);
+            opacity: 1;
+        }
+        
+        .event-six { color: #00E676; text-shadow: 0 0 50px #00E676, 0 0 100px #00E676; }
+        .event-four { color: #00B0FF; text-shadow: 0 0 50px #00B0FF, 0 0 100px #00B0FF; }
+        .event-wicket { color: #FF1744; text-shadow: 0 0 50px #FF1744, 0 0 100px #FF1744; }
+        .event-notout { color: #FF9800; text-shadow: 0 0 50px #FF9800, 0 0 100px #FF9800; }
+        .event-wide { color: #E040FB; text-shadow: 0 0 50px #E040FB, 0 0 100px #E040FB; }
+        .event-noball { color: #FFEA00; text-shadow: 0 0 50px #FFEA00, 0 0 100px #FFEA00; }
+        
+        /* Analysis Graph Overlay */
+        .graph-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 15, 40, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998; 
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(20px);
+        }
+        .graph-overlay.active { opacity: 1; pointer-events: auto; }
+        .graph-title { font-size: 60px; font-weight: 800; color: #00E676; margin-bottom: 40px; text-shadow: 0 0 20px rgba(0, 230, 118, 0.5); }
+        .chart-container { display: flex; align-items: flex-end; justify-content: center; gap: 30px; height: 450px; width: 80%; border-bottom: 4px solid rgba(255,255,255,0.3); padding-bottom: 10px; }
+        .bar-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 60px; }
+        .bar { width: 100%; background: linear-gradient(180deg, #2196F3 0%, #0D47A1 100%); border-radius: 8px 8px 0 0; box-shadow: 0 0 15px rgba(33, 150, 243, 0.4); display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; min-height: 5px; transition: height 0.5s ease; flex-shrink: 0; }
+        .bar-label { margin-top: 15px; color: white; font-size: 22px; font-weight: bold; flex-shrink: 0; }
+        .bar-runs { color: #FFF; font-size: 30px; font-weight: bold; margin-bottom: 8px; flex-shrink: 0; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        .wicket-dot { width: 20px; height: 20px; background-color: #FF1744; border-radius: 50%; box-shadow: 0 0 10px #FF1744; border: 2px solid white; z-index: 2; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- EVENT ANIMATION OVERLAY -->
+    <div id="event-overlay" class="event-overlay">
+        <div id="event-text" class="event-text">SIX!</div>
+    </div>
+    
+    <!-- OVER SUMMARY OVERLAY -->
+    <div id="over-summary-overlay" class="event-overlay" style="flex-direction: column;">
+        <div class="graph-title" style="font-size: 80px; text-shadow: 0 0 30px #00E676; margin-bottom: 20px;">END OF OVER <span id="summary-over-num"></span></div>
+        <div style="font-size: 50px; color: white; font-weight: bold; background: rgba(0,0,0,0.5); padding: 15px 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            BOWLER: <span id="summary-bowler" style="color:#00E676;"></span>
+        </div>
+        <div style="display:flex; gap: 60px; margin-top: 40px;">
+            <div style="font-size: 65px; color: #00B0FF; font-weight: bold; background: rgba(0, 176, 255, 0.1); padding: 20px 40px; border-radius: 15px; border: 2px solid #00B0FF; box-shadow: 0 0 20px rgba(0, 176, 255, 0.3);">RUNS: <span id="summary-runs"></span></div>
+            <div style="font-size: 65px; color: #FF1744; font-weight: bold; background: rgba(255, 23, 68, 0.1); padding: 20px 40px; border-radius: 15px; border: 2px solid #FF1744; box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);">WICKETS: <span id="summary-wickets"></span></div>
+        </div>
+    </div>
+    
+    <!-- ANALYSIS GRAPH OVERLAY -->
+    <div id="graph-overlay" class="graph-overlay" onclick="toggleAnalysisGraph()">
+        <div class="graph-title">OVER-BY-OVER ANALYSIS</div>
+        <div id="chart-container" class="chart-container">
+            <!-- Bars injected by JS -->
+        </div>
+        <div style="margin-top:30px; color:rgba(255,255,255,0.5);">Click anywhere to hide graph</div>
+    </div>
+
+    <!-- BATTER SUMMARY OVERLAY -->
+    <div id="batter-summary-overlay" class="graph-overlay" onclick="hideBatterSummary()">
+        <div class="graph-title" style="color: #E040FB; text-shadow: 0 0 20px rgba(224, 64, 251, 0.5);">BATTERS AT CREASE</div>
+        <div style="display:flex; gap: 40px; margin-top: 20px;">
+            <!-- Batsman 1 -->
+            <div style="background: rgba(0, 15, 40, 0.9); padding: 40px; border-radius: 20px; border: 2px solid #E040FB; min-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(224, 64, 251, 0.3);">
+                <div id="bs-name-0" style="font-size: 50px; color: white; font-weight: bold; margin-bottom: 20px;"></div>
+                <div style="font-size: 90px; color: #E040FB; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(224, 64, 251, 0.5);"><span id="bs-runs-0"></span><span style="font-size:40px; color:#aaa; font-weight: normal; text-shadow: none;"> (<span id="bs-balls-0"></span>)</span></div>
+                <div style="display:flex; justify-content: space-between; margin-top: 30px; font-size: 30px; color: #ddd; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div>4s: <span id="bs-4s-0" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>6s: <span id="bs-6s-0" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>SR: <span id="bs-sr-0" style="color:#FF9800; font-weight:bold;"></span></div>
+                </div>
+            </div>
+            <!-- Batsman 2 -->
+            <div style="background: rgba(0, 15, 40, 0.9); padding: 40px; border-radius: 20px; border: 2px solid #00B0FF; min-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0, 176, 255, 0.3);">
+                <div id="bs-name-1" style="font-size: 50px; color: white; font-weight: bold; margin-bottom: 20px;"></div>
+                <div style="font-size: 90px; color: #00B0FF; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0, 176, 255, 0.5);"><span id="bs-runs-1"></span><span style="font-size:40px; color:#aaa; font-weight: normal; text-shadow: none;"> (<span id="bs-balls-1"></span>)</span></div>
+                <div style="display:flex; justify-content: space-between; margin-top: 30px; font-size: 30px; color: #ddd; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div>4s: <span id="bs-4s-1" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>6s: <span id="bs-6s-1" style="color:#00B0FF; font-weight:bold;"></span></div>
+                    <div>SR: <span id="bs-sr-1" style="color:#FF9800; font-weight:bold;"></span></div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:30px; color:rgba(255,255,255,0.5);">Click anywhere to hide</div>
+    </div>
+
+    <!-- FULL SCORECARD OVERLAY -->
+    <div id="scorecard-overlay" class="graph-overlay" onclick="hideScorecard()" style="align-items: center; justify-content: flex-start; padding-top: 50px;">
+        <div class="graph-title" style="color: #FFEA00; text-shadow: 0 0 20px rgba(255, 234, 0, 0.5); font-size: 70px;">BATTING SCORECARD</div>
+        <div style="background: rgba(0, 15, 40, 0.95); width: 85%; max-width: 1200px; border-radius: 20px; border: 2px solid #FFEA00; box-shadow: 0 0 40px rgba(255, 234, 0, 0.3); padding: 30px; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; color: white; text-align: left; font-size: 32px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #FFEA00;">
+                        <th style="padding: 15px; width: 35%;">BATTER</th>
+                        <th style="padding: 15px; width: 25%;">STATUS</th>
+                        <th style="padding: 15px; text-align: center;">R</th>
+                        <th style="padding: 15px; text-align: center;">B</th>
+                        <th style="padding: 15px; text-align: center;">4s</th>
+                        <th style="padding: 15px; text-align: center;">6s</th>
+                        <th style="padding: 15px; text-align: center;">SR</th>
+                    </tr>
+                </thead>
+                <tbody id="scorecard-body">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        <div style="display:flex; justify-content: space-between; width: 85%; max-width: 1200px; margin-top: 20px; font-size: 35px; color: white; font-weight: bold; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            <div>TOTAL: <span id="scorecard-total-runs" style="color:#00E676;"></span>/<span id="scorecard-total-wickets" style="color:#FF1744;"></span></div>
+            <div>OVERS: <span id="scorecard-total-overs" style="color:#00B0FF;"></span></div>
+            <div>EXTRAS: <span id="scorecard-total-extras" style="color:#E040FB;"></span></div>
+        </div>
+        <div style="margin-top:30px; color:rgba(255,255,255,0.5);">Click anywhere to hide</div>
+    </div>
+
+    <!-- FULL BOWLING SCORECARD OVERLAY -->
+    <div id="bowling-scorecard-overlay" class="graph-overlay" onclick="hideBowlingScorecard()" style="align-items: center; justify-content: flex-start; padding-top: 50px;">
+        <div class="graph-title" style="color: #00E5FF; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); font-size: 70px;">BOWLING SCORECARD</div>
+        <div style="background: rgba(0, 15, 40, 0.95); width: 85%; max-width: 1200px; border-radius: 20px; border: 2px solid #00E5FF; box-shadow: 0 0 40px rgba(0, 229, 255, 0.3); padding: 30px; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; color: white; text-align: left; font-size: 32px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #00E5FF;">
+                        <th style="padding: 15px; width: 45%;">BOWLER</th>
+                        <th style="padding: 15px; text-align: center;">O</th>
+                        <th style="padding: 15px; text-align: center;">M</th>
+                        <th style="padding: 15px; text-align: center;">R</th>
+                        <th style="padding: 15px; text-align: center;">W</th>
+                        <th style="padding: 15px; text-align: center;">ECON</th>
+                    </tr>
+                </thead>
+                <tbody id="bowling-scorecard-body">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:30px; color:rgba(255,255,255,0.5);">Click anywhere to hide</div>
+    </div>
+
+    <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px;">
+        <div style="flex:1;"></div>
+        <div style="flex:2; text-align:center;">BOX CRICKET <span>ADMIN DASHBOARD</span></div>
+        <div style="flex:1; text-align:right;">
+            <a href="teams.html" style="background:linear-gradient(135deg, var(--primary-accent), #0056b3); color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:16px; font-weight:bold; letter-spacing:1px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); display:inline-block; transition:all 0.2s;">MANAGE TEAMS & PLAYERS</a>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        
+        <!-- LEFT COLUMN: SETTINGS -->
+        <div style="display:flex; flex-direction:column; gap:25px;">
+
+            <!-- CARD 1: MATCH CONFIGURATION -->
+            <div class="dashboard-card">
+                <h2 class="card-title">1. Match Configuration</h2>
+                
+                <div class="form-grid">
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Tournament Name</label>
+                        <input type="text" id="input-tournament" value="KGK SAMAJ YUVA MANDAL ORGANISED BOX CRICKET TOURNAMENT">
+                    </div>
+
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Tournament Category</label>
+                        <select id="input-category" onchange="handleCategoryChange()" style="width: 100%; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px; font-size: 18px; outline: none; font-weight: bold; cursor: pointer;">
+                            <option value="MAN">MAN</option>
+                            <option value="WOMAN">WOMAN</option>
+                            <option value="COUPAL">COUPAL</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Batting Team</label>
+                        <select id="input-team-a" onchange="handleTeamSelectionChange()"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Bowling Team</label>
+                        <select id="input-team-b" onchange="handleTeamSelectionChange()"></select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Current Innings</label>
+                        <select id="input-innings" style="padding:10px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:6px; outline:none; font-family:inherit; font-size:16px;">
+                            <option value="1">1st Innings</option>
+                            <option value="2" selected>2nd Innings</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Overs</label>
+                        <input type="number" id="input-total-overs" value="6">
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Target Score</label>
+                        <input type="number" id="input-target" value="110">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: PLAYERS ON FIELD -->
+            <div class="dashboard-card">
+                <h2 class="card-title">2. Players on Field</h2>
+                
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Striker Batsman</label>
+                        <select id="input-striker"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Non-Striker Batsman</label>
+                        <select id="input-non-striker"></select>
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Opening Bowler</label>
+                        <select id="input-bowler"></select>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-action save" onclick="saveSettings()">SYNC TO TV SCREEN</button>
+                    <button class="btn-action reset" onclick="resetMatch()">RESET MATCH TO 0-0</button>
+                    <button class="btn-action" style="background:#00E5FF; color:#001A33; border:none; box-shadow: 0 0 10px rgba(0,229,255,0.5);" onclick="startSecondInnings()">START 2ND INNINGS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: SCORING PAD -->
+        <!-- CARD 3: SCORING CONTROLS -->
+        <div class="dashboard-card scorer-controls" style="height: 100%; display: flex; flex-direction: column;">
+            <h2 class="card-title">3. Scoring Pad</h2>
+            
+            <div class="controls-grid" style="flex-grow: 1;">
+                <button class="btn-run" onclick="addRuns(0)">0</button>
+                <button class="btn-run" onclick="addRuns(1)">1</button>
+                <button class="btn-run" onclick="addRuns(2)">2</button>
+                <button class="btn-run" onclick="addRuns(3)">3</button>
+                <button class="btn-run btn-four" onclick="addRuns(4)">4</button>
+                <button class="btn-run btn-six" onclick="addRuns(6)">6</button>
+
+                <button class="btn-extra" onclick="addExtra('WIDE')">WD</button>
+                <button class="btn-extra" onclick="addExtra('NB')">NB</button>
+                
+                <button class="btn-extra" onclick="addExtra('LB')">LB</button>
+                <button class="btn-extra" onclick="addExtra('B')">B</button>
+                
+                <button class="btn-wicket" onclick="addWicket()" style="background:#E53935; color:white;">WICKET</button>
+                <button class="btn-wicket" onclick="retireBatsman()" style="background:#FF9800; color:white;">RETIRE</button>
+                <button class="btn-undo" onclick="undoLastBall()">UNDO</button>
+                <button class="btn-notout" onclick="showNotOut()" style="background:rgba(255, 152, 0, 0.2); color:#FF9800; border:1px solid #FF9800; grid-column: span 2; font-weight:bold;">SHOW "NOT OUT"</button>
+                <button class="btn-analysis" onclick="toggleAnalysisGraph()" style="background:rgba(33, 150, 243, 0.2); color:#2196F3; border:1px solid #2196F3; grid-column: span 1; font-weight:bold; font-size: 16px;">📊 TOGGLE GRAPH</button>
+                <button class="btn-analysis-cancel" onclick="hideAnalysisGraph()" style="background:rgba(244, 67, 54, 0.2); color:#F44336; border:1px solid #F44336; grid-column: span 1; font-weight:bold; font-size: 16px;">❌ CANCEL GRAPH</button>
+                <button class="btn-batters" onclick="toggleBatterSummary()" style="background:rgba(156, 39, 176, 0.2); color:#E040FB; border:1px solid #E040FB; grid-column: span 1; font-weight:bold; font-size: 16px;">🏏 BATTERS SUMMARY</button>
+                <button class="btn-batters-cancel" onclick="hideBatterSummary()" style="background:rgba(244, 67, 54, 0.2); color:#F44336; border:1px solid #F44336; grid-column: span 1; font-weight:bold; font-size: 16px;">❌ CANCEL SUMMARY</button>
+                <button class="btn-scorecard" onclick="toggleScorecard()" style="background:rgba(255, 234, 0, 0.2); color:#FFEA00; border:1px solid #FFEA00; grid-column: span 1; font-weight:bold; font-size: 16px;">📋 SHOW SCORECARD</button>
+                <button class="btn-scorecard-cancel" onclick="hideScorecard()" style="background:rgba(244, 67, 54, 0.2); color:#F44336; border:1px solid #F44336; grid-column: span 1; font-weight:bold; font-size: 16px;">❌ HIDE SCORECARD</button>
+                <button class="btn-bowling-scorecard" onclick="toggleBowlingScorecard()" style="background:rgba(0, 229, 255, 0.2); color:#00E5FF; border:1px solid #00E5FF; grid-column: span 1; font-weight:bold; font-size: 16px;">⚾ SHOW BOWLING</button>
+                <button class="btn-bowling-scorecard-cancel" onclick="hideBowlingScorecard()" style="background:rgba(244, 67, 54, 0.2); color:#F44336; border:1px solid #F44336; grid-column: span 1; font-weight:bold; font-size: 16px;">❌ HIDE BOWLING</button>
+            </div>
+            
+            <div class="free-hit-container">
+                <label class="free-hit-toggle">
+                    <input type="checkbox" id="free-hit-check"> FREE HIT ACTIVE
+                </label>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- MODALS for dynamic entry -->
+    <div id="batsman-modal" class="modal-overlay">
+        <div class="modal-content glass-panel neon-border">
+            <h2>NEW BATSMAN</h2>
+            <div class="input-group">
+                <label>Select Batsman</label>
+                <select id="input-new-batsman"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-save" onclick="saveNewBatsman()">ADD BATSMAN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bowler-modal" class="modal-overlay">
+        <div class="modal-content glass-panel neon-border">
+            <h2>NEW BOWLER</h2>
+            <div class="input-group">
+                <label>Select Bowler</label>
+                <select id="input-new-bowler"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-save" onclick="saveNewBowler()">START OVER</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
