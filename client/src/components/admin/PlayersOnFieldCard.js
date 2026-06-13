@@ -9,6 +9,7 @@ function PlayersOnFieldCard({
   striker,
   nonStriker,
   bowler,
+  connected,
   onStrikerChange,
   onNonStrikerChange,
   onBowlerChange,
@@ -79,8 +80,13 @@ function PlayersOnFieldCard({
       </div>
 
       <div className="btn-row">
-        <button className="btn-action save" onClick={onSave}>
-          SYNC TO TV SCREEN
+        <button
+          className="btn-action save"
+          onClick={onSave}
+          style={!connected ? { opacity: 0.5, cursor: 'not-allowed', position: 'relative' } : {}}
+          title={!connected ? 'Not connected to server' : 'Sync to TV Screen'}
+        >
+          {connected ? '📡 SYNC TO TV SCREEN' : '❌ NOT CONNECTED'}
         </button>
         <button className="btn-action reset" onClick={onReset}>
           RESET MATCH TO 0-0

@@ -60,8 +60,8 @@ fetch(`${backendUrl}/api/state`)
     .then(res => res.json())
     .then(data => {
         if(data.state_data && Object.keys(data.state_data).length > 0) {
-            state = data.state_data;
-            if (!state.allBatsmen) {
+            Object.assign(state, data.state_data);
+            if (!state.allBatsmen && state.batsmen && state.batsmen.length >= 2) {
                 state.allBatsmen = [
                     { id: state.batsmen[0].id, name: state.batsmen[0].name, runs: state.batsmen[0].runs, balls: state.batsmen[0].balls, fours: state.batsmen[0].fours, sixes: state.batsmen[0].sixes, status: "not out" },
                     { id: state.batsmen[1].id, name: state.batsmen[1].name, runs: state.batsmen[1].runs, balls: state.batsmen[1].balls, fours: state.batsmen[1].fours, sixes: state.batsmen[1].sixes, status: "not out" }
@@ -499,6 +499,11 @@ els.freeHitCheck.addEventListener('change', (e) => {
 
 // Admin Setup Handlers
 window.saveSettings = function() {
+    if (!socket || !socket.connected) {
+        alert('❌ NOT CONNECTED to server!\n\nMake sure the backend server is running on port 3000 and refresh this page.');
+        return;
+    }
+
     const strikerVal = els.inpStriker.value;
     const nonStrikerVal = els.inpNonStriker.value;
     if (strikerVal && nonStrikerVal && strikerVal === nonStrikerVal) {
@@ -523,7 +528,7 @@ window.saveSettings = function() {
     state.bowler.name = els.inpBowler.value || "Bowler";
     
     broadcastUpdate();
-    alert("Settings Saved & Synced!");
+    alert("✅ Settings Saved & Synced to TV Screen!");
 };
 
 window.resetMatch = function() {

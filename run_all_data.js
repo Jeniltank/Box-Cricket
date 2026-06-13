@@ -5,7 +5,7 @@ const path = require('path');
 const dbConfig = {
     user: 'postgres',
     host: 'localhost',
-    database: 'boc_cricket',
+    database: 'box_cricket',
     password: 'toor',
     port: 5432,
     connectionTimeoutMillis: 3000, // Timeout after 3 seconds so we don't hang!
@@ -16,7 +16,7 @@ async function checkDatabase() {
     const client = new Client(dbConfig);
     try {
         await client.connect();
-        console.log('Successfully connected to PostgreSQL database "boc_cricket".');
+        console.log('Successfully connected to PostgreSQL database "box_cricket".');
         
         // Check row counts
         const tables = ['tournaments', 'teams', 'players', 'matches', 'app_state'];

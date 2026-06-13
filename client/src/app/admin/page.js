@@ -85,6 +85,11 @@ export default function AdminPage() {
   );
 
   const handleSave = useCallback(() => {
+    if (!connected || !socket) {
+      alert('❌ NOT CONNECTED to server!\n\nPlease make sure the backend server (port 3000) is running and refresh this page.');
+      return;
+    }
+
     const validationError = validateStrikerNotSame(currentStriker, currentNonStriker);
     if (validationError) {
       alert(`Validation Error: ${validationError}`);
@@ -103,8 +108,8 @@ export default function AdminPage() {
     s.bowler.name = currentBowler;
     s.target = effectiveTarget;
     saveSettings(c, s);
-    alert('Settings Saved & Synced!');
-  }, [localConfig, config, effectiveTarget, state, currentStriker, currentNonStriker, currentBowler, errors, validateStrikerNotSame, saveSettings]);
+    alert('✅ Settings Saved & Synced to TV Screen!');
+  }, [socket, connected, localConfig, config, effectiveTarget, state, currentStriker, currentNonStriker, currentBowler, errors, validateStrikerNotSame, saveSettings]);
 
   const handleReset = useCallback(() => {
     if (!confirm('Are you sure you want to reset the match to 0-0?')) return;
@@ -220,6 +225,7 @@ export default function AdminPage() {
             striker={currentStriker}
             nonStriker={currentNonStriker}
             bowler={currentBowler}
+            connected={connected}
             onStrikerChange={setStriker}
             onNonStrikerChange={setNonStriker}
             onBowlerChange={setBowler}

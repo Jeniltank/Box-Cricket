@@ -223,20 +223,20 @@ function loadState() {
     fetch(`${backendUrl}/api/state`)
         .then(res => res.json())
         .then(data => {
-            if (data.state_data && Object.keys(data.state_data).length > 0) state = data.state_data;
-            if (data.config_data && Object.keys(data.config_data).length > 0) config = data.config_data;
+            if (data.state_data && Object.keys(data.state_data).length > 0) Object.assign(state, data.state_data);
+            if (data.config_data && Object.keys(data.config_data).length > 0) Object.assign(config, data.config_data);
             refreshUI();
         })
         .catch(err => console.error("Error loading state:", err));
 }
 
 socket.on('stateUpdated', (data) => {
-    state = data;
+    Object.assign(state, data);
     refreshUI();
 });
 
 socket.on('configUpdated', (data) => {
-    config = data;
+    Object.assign(config, data);
     refreshUI();
 });
 

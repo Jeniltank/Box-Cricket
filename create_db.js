@@ -11,8 +11,8 @@ const client = new Client({
 async function createDb() {
     try {
         await client.connect();
-        await client.query('CREATE DATABASE boc_cricket;');
-        console.log('Database boc_cricket created successfully');
+        await client.query('CREATE DATABASE box_cricket;');
+        console.log('Database box_cricket created successfully');
     } catch (e) {
         if (e.code === '42P04') {
             console.log('Database already exists');

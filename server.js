@@ -13,13 +13,17 @@ app.use(express.static(__dirname));
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: '*' }
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    },
+    maxHttpBufferSize: 1e8 // 100 MB limit for base64 player images
 });
 
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    database: 'boc_cricket',
+    database: 'box_cricket',
     password: 'toor',
     port: 5432,
 });
@@ -27,7 +31,7 @@ const client = new Client({
 async function initDb() {
     try {
         await client.connect();
-        console.log('Connected to PostgreSQL database "boc_cricket" successfully.');
+        console.log('Connected to PostgreSQL database "box_cricket" successfully.');
 
         // Create tables if they don't exist
         const schema = `
@@ -93,7 +97,7 @@ async function initDb() {
         }
     } catch (err) {
         console.error('CRITICAL Database Connection Error:', err.message);
-        console.error('Make sure the "boc_cricket" database has been created in your PostgreSQL server!');
+        console.error('Make sure the "box_cricket" database has been created in your PostgreSQL server!');
     }
 }
 
@@ -269,12 +273,15 @@ app.post('/api/delete-team', async (req, res) => {
 });
 
 // WebSockets for Real-Time Synchronization across Devices
+let syncMutex = Promise.resolve();
+
 io.on('connection', (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
     // Sync State
-    socket.on('updateState', async (data) => {
+    socket.on('updateState', (data) => {
         console.log(`[Socket] Received updateState from ${socket.id}`);
+        syncMutex = syncMutex.then(async () => {
         try {
             const res = await client.query('UPDATE app_state SET state_data = $1 WHERE id = 1', [data]);
             console.log(`[Socket] Database state updated successfully (rows: ${res.rowCount})`);
@@ -282,11 +289,13 @@ io.on('connection', (socket) => {
         } catch (err) {
             console.error('[Socket] Error saving state:', err);
         }
+        });
     });
 
     // Sync Config
-    socket.on('updateConfig', async (data) => {
+    socket.on('updateConfig', (data) => {
         console.log(`[Socket] Received updateConfig from ${socket.id}`);
+        syncMutex = syncMutex.then(async () => {
         try {
             const category = data.category || 'MAN';
             const allTeamsRes = await client.query('SELECT id, name FROM teams WHERE category = $1 ORDER BY id ASC', [category]);
@@ -347,6 +356,7 @@ io.on('connection', (socket) => {
         } catch (err) {
             console.error('[Socket] Error saving config:', err);
         }
+        });
     });
 
     // UI Events (Six, Wicket, etc)

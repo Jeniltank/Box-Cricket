@@ -4,7 +4,7 @@ const { io } = require('./client/node_modules/socket.io-client');
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    database: 'boc_cricket',
+    database: 'box_cricket',
     password: 'toor',
     port: 5432,
 });

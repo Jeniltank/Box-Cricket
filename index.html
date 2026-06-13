@@ -310,22 +310,24 @@
                 </tbody>
             </table>
         </div>
-        <!-- PLAYING SQUADS OVERLAY -->
-        <div id="squads-overlay" class="graph-overlay"
-            style="align-items: center; justify-content: flex-start; padding-top: 40px; overflow-y: auto; padding-bottom: 40px;">
-            <div class="graph-title"
-                style="color: #00E5FF; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); font-size: 70px; margin-bottom: 10px;">
-                PLAYING SQUADS</div>
-            <div id="squads-subtitle"
-                style="font-size: 24px; color: #aaa; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-align: center;">
-                TEAM A VS TEAM B</div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 40px; width: 90%; max-width: 1200px;"
-                id="squads-container">
-                <!-- Injected by JS -->
-            </div>
-        </div>
+    </div>
 
-        <div class="broadcast-container">
+    <!-- PLAYING SQUADS OVERLAY -->
+    <div id="squads-overlay" class="graph-overlay"
+        style="align-items: center; justify-content: flex-start; padding-top: 40px; overflow-y: auto; padding-bottom: 40px;">
+        <div class="graph-title"
+            style="color: #00E5FF; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); font-size: 70px; margin-bottom: 10px;">
+            PLAYING SQUADS</div>
+        <div id="squads-subtitle"
+            style="font-size: 24px; color: #aaa; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-align: center;">
+            TEAM A VS TEAM B</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 40px; width: 90%; max-width: 1200px;"
+            id="squads-container">
+            <!-- Injected by JS -->
+        </div>
+    </div>
+
+    <div class="broadcast-container">
 
             <!-- HEADER SECTION -->
             <header class="header-section glass-panel neon-border">
@@ -506,7 +508,7 @@
                 </section>
             </main>
             <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-            <script src="broadcast.js"></script>
+            <script src="broadcast.js?v=2"></script>
 </body>
 
 </html>
