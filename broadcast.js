@@ -251,6 +251,7 @@ let batterSummaryTimeout = null;
 let scorecardTimeout = null;
 let bowlingScorecardTimeout = null;
 let squadsTimeout = null;
+let animationTimeout = null;
 
 socket.on('showEvent', (type) => {
     if (type === 'GRAPH_TOGGLE') {
@@ -369,6 +370,15 @@ socket.on('showEvent', (type) => {
 });
 
 function showEventAnimation(type) {
+    if (type === 'CLEAR') {
+        const overlay = document.getElementById('event-overlay');
+        const summaryOverlay = document.getElementById('over-summary-overlay');
+        if (overlay) overlay.classList.remove('active');
+        if (summaryOverlay) summaryOverlay.classList.remove('active');
+        if (animationTimeout) clearTimeout(animationTimeout);
+        return;
+    }
+
     const overlay = document.getElementById('event-overlay');
     const text = document.getElementById('event-text');
     if (!overlay || !text) return;

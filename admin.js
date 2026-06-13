@@ -226,6 +226,15 @@ function broadcastUpdate() {
 
 let animationTimeout = null;
 function showEventAnimation(type) {
+    if (type === 'CLEAR') {
+        const overlay = document.getElementById('event-overlay');
+        const summaryOverlay = document.getElementById('over-summary-overlay');
+        if (overlay) overlay.classList.remove('active');
+        if (summaryOverlay) summaryOverlay.classList.remove('active');
+        if (animationTimeout) clearTimeout(animationTimeout);
+        return;
+    }
+
     const overlay = document.getElementById('event-overlay');
     const text = document.getElementById('event-text');
     if(!overlay || !text) return;
@@ -361,10 +370,11 @@ window.addRuns = function(runs) {
     if (runs === 4) {
         striker.fours += 1;
         triggerAnimation('FOUR');
-    }
-    if (runs === 6) {
+    } else if (runs === 6) {
         striker.sixes += 1;
         triggerAnimation('SIX');
+    } else {
+        triggerAnimation('CLEAR');
     }
     
     state.bowler.runs += actualRuns;
@@ -412,6 +422,7 @@ window.addExtra = function(type) {
         updateLastBalls(isLastBallOfOver ? `2${type}` : type);
         swapBatsmen();
         checkOverComplete();
+        triggerAnimation('CLEAR');
     }
     broadcastUpdate();
 };
@@ -485,10 +496,11 @@ window.retireBatsman = function() {
     broadcastUpdate();
 };
 
-window.undoLastBall = function() {
+window.undoLastBall = function undoLastBall() {
     if (undoStack.length === 0) return alert("No more actions to undo.");
     state = undoStack.pop();
     els.freeHitCheck.checked = state.freeHit;
+    triggerAnimation('CLEAR');
     broadcastUpdate();
 };
 
